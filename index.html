@@ -4,24 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Feeri Holding | المنصة الرسمية للتواصل</title>
-    <!-- Tabler Icons (CDN) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --feeri-yellow: #F5B81B;
             --feeri-purple: #6F4FBF;
-            --feeri-green: #2A9D8F;
-            --feeri-dark: #1A1A1A;
-            --feeri-black: #0F0F0F;
-            --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
-
         body {
             background: radial-gradient(ellipse at 30% 20%, #3D2B5F, #1A1030, #0A0518);
             font-family: var(--font-sans);
@@ -29,245 +19,485 @@
             line-height: 1.5;
             min-height: 100vh;
             position: relative;
+            overflow-x: hidden;
         }
         body::before {
             content: "";
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 80% 30%, rgba(111, 79, 191, 0.2), transparent 70%);
+            inset: 0;
+            background: radial-gradient(circle at 80% 30%, rgba(111,79,191,0.2), transparent 70%);
             pointer-events: none;
             z-index: 0;
         }
 
-        /* شاشة الترحيب */
+        /* === شاشة الباب === */
+        .door-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #04010e;
+            overflow: hidden;
+        }
+        .door-screen.fade-out {
+            animation: screenFadeOut 0.7s ease forwards;
+        }
+        @keyframes screenFadeOut { to { opacity: 0; visibility: hidden; } }
+
+        /* إضاءة خلفية */
+        .door-bg-light {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 1px; height: 1px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(245,184,27,0.55) 0%, rgba(111,79,191,0.25) 40%, transparent 70%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .door-screen.opening .door-bg-light {
+            animation: bgLightReveal 1.4s 0.1s ease forwards;
+        }
+        @keyframes bgLightReveal {
+            0%   { width:1px; height:1px; opacity:0; }
+            50%  { width:700px; height:700px; opacity:1; }
+            100% { width:900px; height:900px; opacity:0.5; }
+        }
+
+        /* حاوي الباب */
+        .door-frame {
+            position: relative;
+            width: 300px;
+            height: 420px;
+            display: flex;
+        }
+
+        /* نصفا الباب */
+        .door-panel {
+            position: absolute;
+            top: 0;
+            width: 150px;
+            height: 100%;
+            background: linear-gradient(160deg, #1c1035, #110828, #0a0520);
+            border: 1px solid rgba(245,184,27,0.3);
+            overflow: hidden;
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+        .door-panel.left  { left: 0;  transform-origin: left center;  border-radius: 6px 0 0 6px; }
+        .door-panel.right { right: 0; transform-origin: right center; border-radius: 0 6px 6px 0; }
+        .door-panel::before {
+            content: '';
+            position: absolute;
+            inset: 10px;
+            border: 1px solid rgba(245,184,27,0.18);
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        .door-panel::after {
+            content: '';
+            position: absolute;
+            inset: 22px;
+            border: 1px solid rgba(111,79,191,0.15);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+        .door-panel .edge-light {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, rgba(245,184,27,0.9) 30%, rgba(111,79,191,0.7) 70%, transparent);
+        }
+        .door-panel.left  .edge-light { right: 0; }
+        .door-panel.right .edge-light { left: 0; }
+        .door-panel .panel-letter {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #F5E05C, #F5B81B);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .door-knob {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 11px; height: 11px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ffe680, #c8920a);
+            box-shadow: 0 0 8px rgba(245,184,27,0.6), 0 2px 4px rgba(0,0,0,0.7);
+        }
+        .door-panel.left  .door-knob { right: 8px; }
+        .door-panel.right .door-knob { left: 8px; }
+
+        /* فتح الباب */
+        .door-screen.opening .door-panel.left {
+            animation: openLeft 1.2s 0.15s cubic-bezier(0.42,0,0.18,1) forwards;
+        }
+        .door-screen.opening .door-panel.right {
+            animation: openRight 1.2s 0.15s cubic-bezier(0.42,0,0.18,1) forwards;
+        }
+        @keyframes openLeft  { to { transform: perspective(800px) rotateY(-115deg); } }
+        @keyframes openRight { to { transform: perspective(800px) rotateY(115deg);  } }
+
+        /* =====================
+           اليدان — SVG واقعية
+        ===================== */
+        .hands-wrap {
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 390px;
+            height: 170px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .hand-svg {
+            width: 175px;
+            height: 160px;
+            filter: drop-shadow(0 -6px 18px rgba(245,184,27,0.25));
+        }
+
+        /* حركة اليدين */
+        .door-screen.opening .hand-left {
+            animation: handLeft 1s 0.2s ease-in-out forwards;
+        }
+        .door-screen.opening .hand-right {
+            animation: handRight 1s 0.2s ease-in-out forwards;
+        }
+        @keyframes handLeft  { to { transform: translateX(-75px); } }
+        @keyframes handRight { to { transform: translateX(75px);  } }
+
+        /* === شاشة الترحيب === */
         .splash-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             background: radial-gradient(ellipse at 30% 20%, #2a1a4a, #0a0518);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            transition: opacity 0.8s ease, visibility 0.8s ease;
-            backdrop-filter: blur(10px);
-        }
-        .splash-screen.hide {
             opacity: 0;
             visibility: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
         }
-        .splash-content {
-            text-align: center;
-            padding: 2rem;
-            animation: fadeInUp 0.8s ease;
-        }
+        .splash-screen.show { opacity: 1; visibility: visible; }
+        .splash-screen.hide { opacity: 0; visibility: hidden; }
+        .splash-content { text-align: center; padding: 2rem; animation: fadeInUp 0.8s ease; }
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        .splash-logo {
-            margin-bottom: 2rem;
-        }
+        .splash-logo  { margin-bottom: 2rem; }
+        .profile-logo { width: 90px; height: 90px; border-radius: 22px; object-fit: cover; display: block; margin: 0 auto; }
         .splash-title {
-            font-size: 3rem;
-            font-weight: 800;
+            font-size: 3rem; font-weight: 800;
             background: linear-gradient(135deg, #F5E05C, #F5B81B, #C28AFF, #6FCFBF);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            -webkit-background-clip: text; background-clip: text; color: transparent;
             margin-bottom: 1rem;
         }
-        .splash-message {
-            font-size: 1.2rem;
-            color: #d9cbff;
-            max-width: 500px;
-            margin: 0 auto 2rem;
-            line-height: 1.8;
-        }
+        .splash-message { font-size: 1.2rem; color: #d9cbff; max-width: 500px; margin: 0 auto 2rem; line-height: 1.8; }
         .splash-btn {
             background: linear-gradient(95deg, #6F4FBF, #7C3AED);
-            border: none;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            padding: 12px 32px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: inherit;
+            border: none; color: white; font-size: 1rem; font-weight: 600;
+            padding: 12px 32px; border-radius: 50px; cursor: pointer;
+            transition: all 0.3s; font-family: inherit;
             box-shadow: 0 4px 15px rgba(111,79,191,0.4);
         }
-        .splash-btn:hover {
-            transform: scale(1.05);
-            background: linear-gradient(95deg, #7C3AED, #6F4FBF);
-            box-shadow: 0 6px 20px rgba(111,79,191,0.6);
-        }
+        .splash-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(111,79,191,0.6); }
 
-        /* المحتوى الرئيسي - يظهر بعد الترحيب */
+        /* === المحتوى الرئيسي === */
         .main-content {
-            opacity: 0;
-            transition: opacity 0.6s ease;
-            position: relative;
-            z-index: 2;
+            opacity: 0; transition: opacity 0.6s ease;
+            position: relative; z-index: 2;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             padding: 2rem 1.5rem;
         }
-        .main-content.visible {
-            opacity: 1;
-        }
-        .container {
-            max-width: 700px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        /* بطاقة الروابط الاحترافية */
+        .main-content.visible { opacity: 1; }
+        .container { max-width: 700px; width: 100%; margin: 0 auto; }
         .links-card {
-            background: rgba(18, 12, 32, 0.85);
+            background: rgba(18,12,32,0.85);
             backdrop-filter: blur(12px);
             border-radius: 2rem;
-            border: 1px solid rgba(156, 110, 255, 0.4);
+            border: 1px solid rgba(156,110,255,0.4);
             padding: 2rem;
             box-shadow: 0 25px 45px -20px rgba(0,0,0,0.5);
             text-align: center;
         }
-        .profile-area {
-            margin-bottom: 2rem;
-        }
-        /* شعار SVG احترافي */
-        .profile-logo {
-            width: 90px;
-            height: 90px;
-            margin: 0 auto 1rem;
-        }
+        .profile-area { margin-bottom: 2rem; }
         .profile-name {
-            font-size: 1.8rem;
-            font-weight: 800;
+            font-size: 1.8rem; font-weight: 800;
             background: linear-gradient(135deg, #F5E05C, #F5B81B, #C28AFF, #6FCFBF);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            -webkit-background-clip: text; background-clip: text; color: transparent;
         }
-        .profile-title {
-            color: #c8b5ff;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            margin-top: 0.3rem;
-        }
-        .profile-bio {
-            color: #b098e0;
-            font-size: 0.85rem;
-            margin-top: 1rem;
-            padding: 0 1rem;
-            line-height: 1.6;
-        }
+        .profile-title { color: #c8b5ff; font-size: 0.9rem; letter-spacing: 1px; margin-top: 0.3rem; }
+        .profile-bio   { color: #b098e0; font-size: 0.85rem; margin-top: 1rem; padding: 0 1rem; line-height: 1.6; }
         .divider {
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(156,110,255,0.5), transparent);
             margin: 1.5rem 0;
         }
-        /* شبكة الروابط */
-        .links-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
+        .links-grid { display: flex; flex-direction: column; gap: 1rem; }
         .social-link-btn {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(30, 22, 60, 0.7);
-            border: 0.5px solid rgba(156, 110, 255, 0.3);
-            border-radius: 60px;
-            padding: 0.9rem 1.5rem;
-            text-decoration: none;
-            transition: all 0.3s;
-            color: #f0eefc;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(30,22,60,0.7);
+            border: 0.5px solid rgba(156,110,255,0.3);
+            border-radius: 60px; padding: 0.9rem 1.5rem;
+            text-decoration: none; transition: all 0.3s; color: #f0eefc;
         }
-        .social-link-btn:hover {
-            background: #6F4FBF;
-            transform: translateX(5px);
-            border-color: #F5B81B;
-        }
-        .link-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .link-left i {
-            font-size: 24px;
-        }
-        .link-left span {
-            font-weight: 500;
-            font-size: 1rem;
-        }
-        .link-right i {
-            font-size: 18px;
-            opacity: 0.7;
-        }
-        .social-link-btn:hover .link-right i {
-            opacity: 1;
-            transform: translateX(3px);
-            transition: 0.2s;
-        }
-        /* ألوان خاصة لكل منصة */
-        .btn-youtube:hover { background: #FF0000; }
+        .social-link-btn:hover { background: #6F4FBF; transform: translateX(5px); border-color: #F5B81B; }
+        .link-left { display: flex; align-items: center; gap: 15px; }
+        .link-left i { font-size: 24px; }
+        .link-left span { font-weight: 500; font-size: 1rem; }
+        .link-right i { font-size: 18px; opacity: 0.7; }
+        .social-link-btn:hover .link-right i { opacity:1; transform:translateX(3px); transition:0.2s; }
+        .btn-youtube:hover   { background: #FF0000; }
         .btn-instagram:hover { background: #E4405F; }
-        .btn-x:hover { background: #000000; }
-        .btn-snapchat:hover { background: #FFFC00; color: #000; }
-        .btn-linkedin:hover { background: #0A66C2; }
-        .btn-facebook:hover { background: #1877F2; }
+        .btn-x:hover         { background: #000; }
+        .btn-snapchat:hover  { background: #FFFC00; color: #000; }
+        .btn-linkedin:hover  { background: #0A66C2; }
+        .btn-facebook:hover  { background: #1877F2; }
+        .footer-note { margin-top: 2rem; font-size: 0.7rem; color: #6a5a8e; }
 
-        .footer-note {
-            margin-top: 2rem;
-            font-size: 0.7rem;
-            color: #6a5a8e;
-            text-align: center;
+        /* === المربعات المتحركة === */
+        .moving-glow-box {
+            position: fixed;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            color: #F5B81B; font-size: 0.8rem; font-weight: bold;
+            padding: 8px 18px; border-radius: 40px;
+            border: 1px solid rgba(245,184,27,0.8);
+            font-family: var(--font-sans); white-space: nowrap;
+            z-index: 999; pointer-events: none;
         }
+        .moving-glow-box.top {
+            top: 30px; right: 20px;
+            animation: moveHTop 18s ease-in-out infinite alternate, glowPulse 1.5s ease-in-out infinite alternate;
+        }
+        .moving-glow-box.bottom {
+            bottom: 30px; left: 20px;
+            animation: moveHBottom 18s ease-in-out infinite alternate, glowPulse 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes moveHBottom { 0%{left:20px} 100%{left:calc(100% - 160px)} }
+        @keyframes moveHTop    { 0%{right:20px} 100%{right:calc(100% - 160px)} }
+        @keyframes glowPulse {
+            0%   { box-shadow:0 0 5px #F5B81B,0 0 5px #6F4FBF; border-color:#F5B81B; background:rgba(0,0,0,0.6); }
+            100% { box-shadow:0 0 20px #F5B81B,0 0 15px #6F4FBF,0 0 5px #fff; border-color:#FFF200; background:rgba(111,79,191,0.2); color:#fff; }
+        }
+
         @media (max-width: 550px) {
-            .links-card { padding: 1.5rem; }
-            .profile-name { font-size: 1.4rem; }
-            .link-left span { font-size: 0.85rem; }
-            .link-left i { font-size: 20px; }
-            .social-link-btn { padding: 0.7rem 1.2rem; }
+            .door-frame { width: 240px; height: 340px; }
+            .door-panel { width: 120px; }
+            .hands-wrap { width: 300px; }
+            .hand-svg   { width: 135px; height: 125px; }
         }
     </style>
 </head>
 <body>
 
-<!-- شاشة الترحيب -->
+<div class="moving-glow-box top">✨ feeri holding ✨</div>
+<div class="moving-glow-box bottom">✨ feeri holding ✨</div>
+
+<!-- ====== شاشة الباب ====== -->
+<div class="door-screen" id="doorScreen">
+    <div class="door-bg-light"></div>
+
+    <div class="door-frame">
+        <div class="door-panel left">
+            <div class="edge-light"></div>
+            <div class="panel-letter">F</div>
+            <div class="door-knob"></div>
+        </div>
+        <div class="door-panel right">
+            <div class="edge-light"></div>
+            <div class="panel-letter">H</div>
+            <div class="door-knob"></div>
+        </div>
+
+        <!-- اليدان SVG واقعية -->
+        <div class="hands-wrap">
+
+            <!-- اليد اليسرى -->
+            <svg class="hand-svg hand-left" viewBox="0 0 175 160" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <!-- تدرج جلد البشرة -->
+                <linearGradient id="skinGradL" x1="0%" y1="0%" x2="60%" y2="100%">
+                  <stop offset="0%"   stop-color="#c47a45"/>
+                  <stop offset="40%"  stop-color="#b06332"/>
+                  <stop offset="100%" stop-color="#8a4520"/>
+                </linearGradient>
+                <!-- تدرج الساعد -->
+                <linearGradient id="armGradL" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#8a4520"/>
+                  <stop offset="50%"  stop-color="#b06332"/>
+                  <stop offset="100%" stop-color="#8a4520"/>
+                </linearGradient>
+                <!-- ظل تحت اليد -->
+                <radialGradient id="palmShadL" cx="50%" cy="70%" r="50%">
+                  <stop offset="0%"   stop-color="#7a3a15" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#7a3a15" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="softShadL">
+                  <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+                </filter>
+              </defs>
+
+              <!-- الساعد -->
+              <rect x="52" y="122" width="70" height="40" rx="16" fill="url(#armGradL)" filter="url(#softShadL)"/>
+              <!-- خط الرسغ -->
+              <ellipse cx="87" cy="123" rx="33" ry="6" fill="#9a5528" opacity="0.5"/>
+              <!-- خطوط الرسغ -->
+              <path d="M58 119 Q87 115 116 119" stroke="#7a3a15" stroke-width="1" fill="none" opacity="0.6"/>
+              <path d="M60 122 Q87 118 114 122" stroke="#7a3a15" stroke-width="0.7" fill="none" opacity="0.4"/>
+
+              <!-- راحة اليد -->
+              <path d="
+                M55,118
+                C48,112 42,102 40,90
+                C38,78 40,68 46,62
+                C50,58 56,58 60,62
+                L62,64
+                L63,52
+                C63,46 67,42 72,42
+                C77,42 80,46 80,52
+                L80,56
+                L80,44
+                C80,38 84,34 89,34
+                C94,34 98,38 98,44
+                L98,56
+                L98,46
+                C98,40 102,36 107,36
+                C112,36 116,40 116,46
+                L116,62
+                C119,58 124,57 128,60
+                C133,64 133,72 130,80
+                C127,88 120,98 114,108
+                C110,114 104,118 98,120
+                L55,120 Z
+              " fill="url(#skinGradL)" filter="url(#softShadL)"/>
+
+              <!-- ظل داخلي راحة اليد -->
+              <ellipse cx="82" cy="105" rx="32" ry="14" fill="url(#palmShadL)"/>
+
+              <!-- تفاصيل المفاصل — خطوط دقيقة -->
+              <!-- إصبع السبابة -->
+              <path d="M65,80 Q67,77 69,80" stroke="#7a3a15" stroke-width="1.2" fill="none" opacity="0.7"/>
+              <!-- إصبع الوسطى -->
+              <path d="M81,73 Q83,70 85,73" stroke="#7a3a15" stroke-width="1.2" fill="none" opacity="0.7"/>
+              <!-- إصبع البنصر -->
+              <path d="M97,76 Q99,73 101,76" stroke="#7a3a15" stroke-width="1.2" fill="none" opacity="0.7"/>
+              <!-- إصبع الخنصر -->
+              <path d="M111,82 Q113,79 115,82" stroke="#7a3a15" stroke-width="1.2" fill="none" opacity="0.6"/>
+
+              <!-- مفاصل راحة اليد -->
+              <path d="M62,95 Q75,92 88,93 Q101,92 114,96" stroke="#7a3a15" stroke-width="0.8" fill="none" opacity="0.5"/>
+
+              <!-- خط الإبهام -->
+              <path d="M54,90 Q50,82 52,74 Q54,66 60,66" stroke="#7a3a15" stroke-width="1" fill="none" opacity="0.5"/>
+
+              <!-- أظافر دقيقة -->
+              <ellipse cx="66"  cy="45" rx="6.5" ry="4.5" fill="#d4956a" stroke="#9a6040" stroke-width="0.7" opacity="0.85"/>
+              <ellipse cx="82"  cy="37" rx="6.5" ry="4.5" fill="#d4956a" stroke="#9a6040" stroke-width="0.7" opacity="0.85"/>
+              <ellipse cx="100" cy="39" rx="6.5" ry="4.5" fill="#d4956a" stroke="#9a6040" stroke-width="0.7" opacity="0.85"/>
+              <ellipse cx="114" cy="48" rx="5.5" ry="4"   fill="#d4956a" stroke="#9a6040" stroke-width="0.7" opacity="0.85"/>
+
+              <!-- بريق خفيف على الأصابع -->
+              <ellipse cx="66"  cy="56" rx="3" ry="6" fill="white" opacity="0.07" transform="rotate(-5,66,56)"/>
+              <ellipse cx="82"  cy="50" rx="3" ry="6" fill="white" opacity="0.07"/>
+              <ellipse cx="100" cy="52" rx="3" ry="6" fill="white" opacity="0.07"/>
+              <ellipse cx="114" cy="60" rx="2.5" ry="5" fill="white" opacity="0.06"/>
+
+              <!-- بريق خفيف على راحة اليد -->
+              <ellipse cx="80" cy="90" rx="18" ry="12" fill="white" opacity="0.04"/>
+            </svg>
+
+            <!-- اليد اليمنى (مطابقة ومعكوسة أفقياً) -->
+            <svg class="hand-svg hand-right" viewBox="0 0 175 160" xmlns="http://www.w3.org/2000/svg" style="transform:scaleX(-1)">
+              <defs>
+                <linearGradient id="skinGradR" x1="0%" y1="0%" x2="60%" y2="100%">
+                  <stop offset="0%"   stop-color="#c47a45"/>
+                  <stop offset="40%"  stop-color="#b06332"/>
+                  <stop offset="100%" stop-color="#8a4520"/>
+                </linearGradient>
+                <linearGradient id="armGradR" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#8a4520"/>
+                  <stop offset="50%"  stop-color="#b06332"/>
+                  <stop offset="100%" stop-color="#8a4520"/>
+                </linearGradient>
+                <radialGradient id="palmShadR" cx="50%" cy="70%" r="50%">
+                  <stop offset="0%"   stop-color="#7a3a15" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#7a3a15" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="softShadR">
+                  <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+                </filter>
+              </defs>
+              <rect x="52" y="122" width="70" height="40" rx="16" fill="url(#armGradR)" filter="url(#softShadR)"/>
+              <ellipse cx="87" cy="123" rx="33" ry="6" fill="#9a5528" opacity="0.5"/>
+              <path d="M58 119 Q87 115 116 119" stroke="#7a3a15" stroke-width="1" fill="none" opacity="0.6"/>
+              <path d="M60 122 Q87 118 114 122" stroke="#7a3a15" stroke-width="0.7" fill="none" opacity="0.4"/>
+              <path d="
+                M55,118
+                C48,112 42,102 40,90
+                C38,78 40,68 46,62
+                C50,58 56,58 60,62
+                L62,64
+                L63,52
+                C63,46 67,42 72,42
+                C77,42 80,46 80,52
+                L80,56
+                L80,44
+                C80,38 84,34 89,34
+                C94,34 98,38 98,44
+                L98,56
+                L98,46
+                C98,40 102,36 107,36
+                C112,36 116,40 116,46
+                L116,62
+                C119,58 124,57 128,60
+                C133,64 133,72 130,80
+                C127,88 120,98 114,108
+                C110,114 104,118 98,120
+                L55,120 Z
+              " fill="url(#skinGradR)" filter="url(#softShadR)"/>
+              <ellipse cx="82" cy="105" rx="32" ry="14" fill="url(#palmShadR)"/>
+              <path d="M65,80 Q67,77 69,80" stroke="#7a3a15" stroke-width="1.2" fill="none" opacity="0.7"/>
+              <path d="M81,73 Q83,70 85,73" stroke="#7a3a15" stroke-width="1.2" fill="none" opacity="0.7"/>
+              <path d="M97,76 Q99,73 101,76" stroke="#7a3a15" stroke-width="1.2" fill="none" opacity="0.7"/>
+              <path d="M111,82 Q113,79 115,82" stroke="#7a3a15" stroke-width="1.2" fill="none" opacity="0.6"/>
+              <path d="M62,95 Q75,92 88,93 Q101,92 114,96" stroke="#7a3a15" stroke-width="0.8" fill="none" opacity="0.5"/>
+              <path d="M54,90 Q50,82 52,74 Q54,66 60,66" stroke="#7a3a15" stroke-width="1" fill="none" opacity="0.5"/>
+              <ellipse cx="66"  cy="45" rx="6.5" ry="4.5" fill="#d4956a" stroke="#9a6040" stroke-width="0.7" opacity="0.85"/>
+              <ellipse cx="82"  cy="37" rx="6.5" ry="4.5" fill="#d4956a" stroke="#9a6040" stroke-width="0.7" opacity="0.85"/>
+              <ellipse cx="100" cy="39" rx="6.5" ry="4.5" fill="#d4956a" stroke="#9a6040" stroke-width="0.7" opacity="0.85"/>
+              <ellipse cx="114" cy="48" rx="5.5" ry="4"   fill="#d4956a" stroke="#9a6040" stroke-width="0.7" opacity="0.85"/>
+              <ellipse cx="66"  cy="56" rx="3" ry="6" fill="white" opacity="0.07" transform="rotate(-5,66,56)"/>
+              <ellipse cx="82"  cy="50" rx="3" ry="6" fill="white" opacity="0.07"/>
+              <ellipse cx="100" cy="52" rx="3" ry="6" fill="white" opacity="0.07"/>
+              <ellipse cx="114" cy="60" rx="2.5" ry="5" fill="white" opacity="0.06"/>
+              <ellipse cx="80" cy="90" rx="18" ry="12" fill="white" opacity="0.04"/>
+            </svg>
+
+        </div><!-- end hands-wrap -->
+    </div><!-- end door-frame -->
+</div>
+
+<!-- ====== شاشة الترحيب ====== -->
 <div class="splash-screen" id="splashScreen">
     <div class="splash-content">
         <div class="splash-logo">
-            <svg class="profile-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="100" height="100" rx="22" fill="url(#bgGradient)" stroke="#F5B81B" stroke-width="1.5"/>
-                <rect x="28" y="38" width="44" height="32" rx="4" fill="#F5B81B" stroke="#2A9D8F" stroke-width="1.5"/>
-                <path d="M50 38 L50 28" stroke="#6F4FBF" stroke-width="3" stroke-linecap="round"/>
-                <path d="M40 28 L60 28" stroke="#6F4FBF" stroke-width="3" stroke-linecap="round"/>
-                <circle cx="38" cy="70" r="6" fill="#2A9D8F" stroke="#1A1A1A" stroke-width="1.5"/>
-                <circle cx="62" cy="70" r="6" fill="#2A9D8F" stroke="#1A1A1A" stroke-width="1.5"/>
-                <path d="M46 50 L53 57 L66 43" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                <defs>
-                    <linearGradient id="bgGradient" x1="0" y1="0" x2="100" y2="100">
-                        <stop offset="0%" stop-color="#2b1e42"/>
-                        <stop offset="100%" stop-color="#1A1030"/>
-                    </linearGradient>
-                </defs>
-            </svg>
+            <img src="Untitled.jpg" alt="Feeri Holding Logo" class="profile-logo">
         </div>
         <h1 class="splash-title">FEERI HOLDING</h1>
         <p class="splash-message">
@@ -279,27 +509,12 @@
     </div>
 </div>
 
-<!-- المحتوى الرئيسي: صفحة الروابط -->
+<!-- ====== المحتوى الرئيسي ====== -->
 <div class="main-content" id="mainContent">
     <div class="container">
         <div class="links-card">
             <div class="profile-area">
-                <!-- شعار Feeri -->
-                <svg class="profile-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="100" height="100" rx="22" fill="url(#bgGradient2)" stroke="#F5B81B" stroke-width="1.5"/>
-                    <rect x="28" y="38" width="44" height="32" rx="4" fill="#F5B81B" stroke="#2A9D8F" stroke-width="1.5"/>
-                    <path d="M50 38 L50 28" stroke="#6F4FBF" stroke-width="3" stroke-linecap="round"/>
-                    <path d="M40 28 L60 28" stroke="#6F4FBF" stroke-width="3" stroke-linecap="round"/>
-                    <circle cx="38" cy="70" r="6" fill="#2A9D8F" stroke="#1A1A1A" stroke-width="1.5"/>
-                    <circle cx="62" cy="70" r="6" fill="#2A9D8F" stroke="#1A1A1A" stroke-width="1.5"/>
-                    <path d="M46 50 L53 57 L66 43" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    <defs>
-                        <linearGradient id="bgGradient2" x1="0" y1="0" x2="100" y2="100">
-                            <stop offset="0%" stop-color="#2b1e42"/>
-                            <stop offset="100%" stop-color="#1A1030"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
+                <img src="Untitled.jpg" alt="Feeri Holding Logo" class="profile-logo" style="margin-bottom:1rem;">
                 <h2 class="profile-name">FEERI HOLDING</h2>
                 <div class="profile-title">لوجستيات الجيل القادم | رؤية 2030</div>
                 <p class="profile-bio">
@@ -308,103 +523,63 @@
                 </p>
             </div>
             <div class="divider"></div>
-            
-            <!-- شبكة الروابط الرسمية -->
             <div class="links-grid">
-                <!-- يوتيوب -->
                 <a href="https://www.youtube.com/@feeriholding" target="_blank" class="social-link-btn btn-youtube">
-                    <div class="link-left">
-                        <i class="ti ti-brand-youtube" style="color:#FF3B3B"></i>
-                        <span>قناة يوتيوب الرسمية</span>
-                    </div>
-                    <div class="link-right">
-                        <i class="ti ti-arrow-left"></i>
-                    </div>
+                    <div class="link-left"><i class="ti ti-brand-youtube" style="color:#FF3B3B"></i><span>قناة يوتيوب الرسمية</span></div>
+                    <div class="link-right"><i class="ti ti-arrow-left"></i></div>
                 </a>
-                <!-- انستقرام -->
                 <a href="https://www.instagram.com/feeriholding" target="_blank" class="social-link-btn btn-instagram">
-                    <div class="link-left">
-                        <i class="ti ti-brand-instagram" style="color:#E4405F"></i>
-                        <span>انستقرام Feeri</span>
-                    </div>
-                    <div class="link-right">
-                        <i class="ti ti-arrow-left"></i>
-                    </div>
+                    <div class="link-left"><i class="ti ti-brand-instagram" style="color:#E4405F"></i><span>انستقرام Feeri</span></div>
+                    <div class="link-right"><i class="ti ti-arrow-left"></i></div>
                 </a>
-                <!-- X (تويتر) -->
                 <a href="https://x.com/feerilogis" target="_blank" class="social-link-btn btn-x">
-                    <div class="link-left">
-                        <i class="ti ti-brand-x" style="color:#FFFFFF"></i>
-                        <span>حساب X الرسمي</span>
-                    </div>
-                    <div class="link-right">
-                        <i class="ti ti-arrow-left"></i>
-                    </div>
+                    <div class="link-left"><i class="ti ti-brand-x" style="color:#FFF"></i><span>حساب X الرسمي</span></div>
+                    <div class="link-right"><i class="ti ti-arrow-left"></i></div>
                 </a>
-                <!-- سناب شات -->
                 <a href="https://snapchat.com/t/L2YH5Wyl" target="_blank" class="social-link-btn btn-snapchat">
-                    <div class="link-left">
-                        <i class="ti ti-brand-snapchat" style="color:#FFFC00"></i>
-                        <span>سناب شات Feeri</span>
-                    </div>
-                    <div class="link-right">
-                        <i class="ti ti-arrow-left"></i>
-                    </div>
+                    <div class="link-left"><i class="ti ti-brand-snapchat" style="color:#FFFC00"></i><span>سناب شات Feeri</span></div>
+                    <div class="link-right"><i class="ti ti-arrow-left"></i></div>
                 </a>
-                <!-- لينكدإن -->
                 <a href="https://www.linkedin.com/in/feeri-holding-88b266342" target="_blank" class="social-link-btn btn-linkedin">
-                    <div class="link-left">
-                        <i class="ti ti-brand-linkedin" style="color:#0A66C2"></i>
-                        <span>لينكدإن Feeri</span>
-                    </div>
-                    <div class="link-right">
-                        <i class="ti ti-arrow-left"></i>
-                    </div>
+                    <div class="link-left"><i class="ti ti-brand-linkedin" style="color:#0A66C2"></i><span>لينكدإن Feeri</span></div>
+                    <div class="link-right"><i class="ti ti-arrow-left"></i></div>
                 </a>
-                <!-- فيسبوك -->
                 <a href="https://www.facebook.com/share/1QiNRZoc8W/" target="_blank" class="social-link-btn btn-facebook">
-                    <div class="link-left">
-                        <i class="ti ti-brand-facebook" style="color:#1877F2"></i>
-                        <span>صفحة فيسبوك الرسمية</span>
-                    </div>
-                    <div class="link-right">
-                        <i class="ti ti-arrow-left"></i>
-                    </div>
+                    <div class="link-left"><i class="ti ti-brand-facebook" style="color:#1877F2"></i><span>صفحة فيسبوك الرسمية</span></div>
+                    <div class="link-right"><i class="ti ti-arrow-left"></i></div>
                 </a>
             </div>
-            
-            <div class="footer-note">
-                © 2026 Feeri Holding — جميع الحقوق محفوظة
-            </div>
+            <div class="footer-note">© 2026 Feeri Holding — جميع الحقوق محفوظة</div>
         </div>
     </div>
 </div>
 
 <script>
-    // التحكم في شاشة الترحيب وظهور المحتوى الرئيسي
+    const doorScreen   = document.getElementById('doorScreen');
     const splashScreen = document.getElementById('splashScreen');
-    const mainContent = document.getElementById('mainContent');
-    const enterBtn = document.getElementById('enterBtn');
+    const mainContent  = document.getElementById('mainContent');
+    const enterBtn     = document.getElementById('enterBtn');
 
-    enterBtn.addEventListener('click', () => {
+    function enterSite() {
         splashScreen.classList.add('hide');
         mainContent.classList.add('visible');
-        // اختياري: إزالة عنصر splash من DOM بعد انتهاء الانتقال
-        setTimeout(() => {
-            splashScreen.style.display = 'none';
-        }, 800);
-    });
+        setTimeout(() => { splashScreen.style.display = 'none'; }, 800);
+    }
 
-    // جعل المحتوى يظهر تلقائياً بعد 2 ثانية إذا لم يتم الضغط (اختياري)
-    setTimeout(() => {
-        if (splashScreen.style.display !== 'none') {
-            splashScreen.classList.add('hide');
-            mainContent.classList.add('visible');
-            setTimeout(() => {
-                splashScreen.style.display = 'none';
-            }, 800);
-        }
-    }, 3000);
+    function startSequence() {
+        setTimeout(() => { doorScreen.classList.add('opening'); }, 700);
+        setTimeout(() => {
+            doorScreen.classList.add('fade-out');
+            splashScreen.classList.add('show');
+            setTimeout(() => { doorScreen.style.display = 'none'; }, 750);
+        }, 2200);
+        setTimeout(() => {
+            if (!mainContent.classList.contains('visible')) enterSite();
+        }, 6500);
+    }
+
+    enterBtn.addEventListener('click', enterSite);
+    startSequence();
 </script>
 </body>
 </html>
